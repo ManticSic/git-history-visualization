@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "git-history-visualization", "git-history-visualization\git-history-visualization.csproj", "{7BD89DDB-9977-42EE-8158-7EA0330B88DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gitHistoryVisualization", "gitHistoryVisualization\gitHistoryVisualization.csproj", "{7BD89DDB-9977-42EE-8158-7EA0330B88DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
