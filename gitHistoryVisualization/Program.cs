@@ -39,39 +39,35 @@ internal class Program
                                               .ToList();
         swProcessCommits.Stop();
         Console.WriteLine($"Finished processing of commits after {swProcessCommits.Elapsed.TotalSeconds} seconds.");
-        
-        int   imageSize     = options.Size + 100; // add margin
-        float centerX       = imageSize / 2f;
-        float centerY       = imageSize / 2f;
 
-        DateTime startDate          = commits.Min(summary => summary.When);
-        DateTime endDate            = commits.Max(summary => summary.When);
+        DateTime startDate = commits.Min(summary => summary.When);
+        DateTime endDate   = commits.Max(summary => summary.When);
+
 
         ArchimedeanSpiral spiral = new(options.Size, 365, startDate, endDate);
 
         Console.WriteLine($"Total entries to process: {commits.Count}");
         Stopwatch swDraw = Stopwatch.StartNew();
 
-        Bitmap bitmap = new(imageSize, imageSize);
-        using (Graphics g = Graphics.FromImage(bitmap))
+        using Canvas canvas = new(options.Size, 50);
+
+        canvas.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        canvas.Graphics.Clear(_drawUtil.BackgroundColor);
+
+        foreach (DateSummary dateSummary in commits)
         {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(_drawUtil.BackgroundColor);
+            float angle = spiral.StartAngle + CalculateDaysSinceStart(dateSummary, startDate) * spiral.Increment;
+            float radius = (float)(spiral.InnerDiameter +
+                                   (spiral.OuterDiameter - spiral.InnerDiameter) * (angle - spiral.StartAngle) / (spiral.Turns * 2 * Math.PI));
 
-            foreach (DateSummary dateSummary in commits)
-            {
-                float angle  = spiral.StartAngle + CalculateDaysSinceStart(dateSummary, startDate) * spiral.Increment;
-                float radius = (float)(spiral.InnerDiameter + (spiral.OuterDiameter - spiral.InnerDiameter) * (angle - spiral.StartAngle) / (spiral.Turns * 2 * Math.PI));
+            float x = canvas.CenterX + radius * (float)Math.Cos(angle);
+            float y = canvas.CenterY + radius * (float)Math.Sin(angle);
 
-                float x = centerX + radius * (float)Math.Cos(angle);
-                float y = centerY + radius * (float)Math.Sin(angle);
-
-                _drawUtil.DrawDateSummary(g, dateSummary, x, y);
-            }
+            _drawUtil.DrawDateSummary(canvas.Graphics, dateSummary, x, y);
         }
 
         // save image
-        bitmap.Save(options.OutputPath, ImageFormat.Png);
+        canvas.Bitmap.Save(options.OutputPath, ImageFormat.Png);
 
         swDraw.Stop();
         swTotal.Stop();
