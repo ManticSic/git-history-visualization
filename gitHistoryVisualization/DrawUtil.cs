@@ -7,14 +7,12 @@ namespace gitHistoryVisualization;
 
 public class DrawUtil
 {
-    private readonly DrawConstants _constants;
-
     public DrawUtil(DrawConstants constants)
     {
-        _constants = constants;
+        Constants = constants;
     }
 
-    public Color BackgroundColor => _constants.BackgroundColor;
+    public DrawConstants Constants { get; }
 
     public void DrawDateSummary(Graphics graphics, DateSummary dateSummary, ArchimedeanSpiral.Point point)
     {
@@ -24,42 +22,41 @@ public class DrawUtil
 
         if (dateSummary.LinesAdded >= dateSummary.LinesRemoved)
         {
-            ellipseColor = _constants.PrimaryColor;
-            borderColor  = _constants.SecondaryColor;
+            ellipseColor = Constants.PrimaryColor;
+            borderColor  = Constants.SecondaryColor;
             radius       = CalculateRadius(dateSummary.LinesAdded);
         }
         else
         {
-            ellipseColor = _constants.BackgroundColor;
-            borderColor  = _constants.PrimaryColor;
+            ellipseColor = Constants.BackgroundColor;
+            borderColor  = Constants.PrimaryColor;
             radius       = CalculateRadius(dateSummary.LinesRemoved);
         }
 
         if (dateSummary.ContainsRootCommit)
         {
-            ellipseColor = _constants.HighlightColor;
-            borderColor  = _constants.SecondaryColor;
+            ellipseColor = Constants.HighlightColor;
+            borderColor  = Constants.SecondaryColor;
         }
 
 
         using SolidBrush fillBrush = new(ellipseColor);
         graphics.FillEllipse(fillBrush, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
 
-        using Pen borderPen = new(borderColor, _constants.Border);
+        using Pen borderPen = new(borderColor, Constants.Border);
         graphics.DrawEllipse(borderPen, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
-
-        if (dateSummary.Release is CommitSummary.ReleaseType.Major or CommitSummary.ReleaseType.Minor)
-        {
-            float angle = 365f / 360f * dateSummary.When.DayOfYear;
-
-            DrawIsoscelesTriangle(graphics, point.X, point.Y, _constants.TriangleSize, angle, radius);
-        }
     }
 
-    public void DrawIsoscelesTriangle(Graphics g, float centerX, float centerY, float baseSize, float angle, float triangleDisplacement)
+    public void DrawRelease(Graphics graphics, DateSummary dateSummary, ArchimedeanSpiral.Point point)
+    {
+        float angle = 365f / 360f * dateSummary.When.DayOfYear;
+        DrawIsoscelesTriangle(graphics, point.X, point.Y, Constants.TriangleSize, angle);
+    }
+
+    public void DrawIsoscelesTriangle(Graphics g, float centerX, float centerY, float baseSize, float angle)
     {
         // Calculate displacement
-        float totalDisplacement = triangleDisplacement + _constants.TriangleSize / 2 + _constants.TriangleDisplacement;
+        float totalDisplacement = Constants.TriangleSize / 2 + Constants.TriangleDisplacement;
         float displacementX     = totalDisplacement * -1 * (float)Math.Sin(angle * Math.PI / 180);
         float displacementY     = totalDisplacement * (float)Math.Cos(angle * Math.PI / 180);
 
@@ -82,26 +79,26 @@ public class DrawUtil
         matrix.TransformPoints(trianglePoints);
 
         // Draw the filled triangle
-        using SolidBrush brush = new(_constants.HighlightColor);
+        using SolidBrush brush = new(Constants.HighlightColor);
         g.FillPolygon(brush, trianglePoints);
 
         // Add border to the Triangle
-        using Pen borderPen = new(_constants.BackgroundColor, _constants.Border);
+        using Pen borderPen = new(Constants.BackgroundColor, Constants.Border);
         g.DrawPolygon(borderPen, trianglePoints);
     }
 
     private float CalculateRadius(int lines)
     {
-        if (lines <= _constants.CircleRadiusBoundaries.First().LeftLimit)
+        if (lines <= Constants.CircleRadiusBoundaries.First().LeftLimit)
         {
-            return _constants.CircleRadiusBoundaries.First().LeftRadius;
+            return Constants.CircleRadiusBoundaries.First().LeftRadius;
         }
 
-        if (lines >= _constants.CircleRadiusBoundaries.Last().RightLimit)
+        if (lines >= Constants.CircleRadiusBoundaries.Last().RightLimit)
         {
-            return _constants.CircleRadiusBoundaries.Last().RightRadius;
+            return Constants.CircleRadiusBoundaries.Last().RightRadius;
         }
 
-        return _constants.CircleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
+        return Constants.CircleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
     }
 }

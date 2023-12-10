@@ -44,6 +44,14 @@ internal class Program
             canvas.DrawCommit(dateSummary);
         }
 
+        List<DateSummary> releases = commits.Where(summary => summary.Release is CommitSummary.ReleaseType.Major or CommitSummary.ReleaseType.Minor)
+                                            .ToList();
+
+        foreach (DateSummary dateSummary in releases)
+        {
+            canvas.DrawRelease(dateSummary);
+        }
+
         // save image
         canvas.Save(options.OutputPath, ImageFormat.Png);
 

@@ -52,7 +52,7 @@ namespace gitHistoryVisualization
             Bitmap withMargin = new(newWidth, newHeight);
 
             using Graphics graphics = Graphics.FromImage(withMargin);
-            graphics.Clear(_drawUtil.BackgroundColor);
+            graphics.Clear(_drawUtil.Constants.BackgroundColor);
             graphics.DrawImage(Bitmap, _margin, _margin, Bitmap.Width, Bitmap.Height);
 
             withMargin.Save(outputPath, format);
@@ -69,6 +69,12 @@ namespace gitHistoryVisualization
         {
             ArchimedeanSpiral.Point point = _spiral.GetPoint(dateSummary);
             _drawUtil.DrawDateSummary(_graphics, dateSummary, point);
+        }
+
+        public void DrawRelease(DateSummary dateSummary)
+        {
+            ArchimedeanSpiral.Point point = _spiral.GetPoint(dateSummary);
+            _drawUtil.DrawRelease(_graphics, dateSummary, point);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -89,7 +95,7 @@ namespace gitHistoryVisualization
         private void PrepareGraphics()
         {
             _graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            _graphics.Clear(_drawUtil.BackgroundColor);
+            _graphics.Clear(_drawUtil.Constants.BackgroundColor);
         }
     }
 }
