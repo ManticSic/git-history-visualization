@@ -69,7 +69,8 @@ internal class Program
                                               .Select(commit => _commitUtill.CommitToCommitSummary(commit, repository, releases))
                                               .GroupBy(summary => summary.When)
                                               .Select(grouping => _commitUtill.CreateDateSummary(grouping))
-                                              .OrderBy(summary => summary.When)
+                                              .OrderByDescending(
+                                                  summary => summary.LinesAdded > summary.LinesRemoved ? summary.LinesAdded : summary.LinesRemoved)
                                               .ToList();
         swProcessCommits.Stop();
         Console.WriteLine($"Finished processing of commits after {swProcessCommits.Elapsed.TotalSeconds} seconds.");
