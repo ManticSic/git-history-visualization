@@ -29,23 +29,15 @@ internal class Program
         DateTime startDate = commits.Min(summary => summary.When);
         DateTime endDate   = commits.Max(summary => summary.When);
 
-        ArchimedeanSpiral spiral = new(options.Size, 365, startDate, endDate);
-
         Console.WriteLine($"Total entries to process: {commits.Count}");
         Stopwatch swDraw = Stopwatch.StartNew();
 
-        using Canvas canvas = new(options.Size, 50);
+        ArchimedeanSpiral spiral = new(options.Size, 365, startDate, endDate);
+        using Canvas      canvas = new(options.Size, 50, spiral);
 
         foreach (DateSummary dateSummary in commits)
         {
-            float angle = spiral.StartAngle + CalculateDaysSinceStart(dateSummary, startDate) * spiral.Increment;
-            float radius = (float)(spiral.InnerDiameter +
-                                   (spiral.OuterDiameter - spiral.InnerDiameter) * (angle - spiral.StartAngle) / (spiral.Turns * 2 * Math.PI));
-
-            float x = canvas.CenterX + radius * (float)Math.Cos(angle);
-            float y = canvas.CenterY + radius * (float)Math.Sin(angle);
-
-            canvas.DrawCommit(x, y, dateSummary);
+            canvas.DrawCommit(dateSummary);
         }
 
         // save image
@@ -82,11 +74,5 @@ internal class Program
         swProcessCommits.Stop();
         Console.WriteLine($"Finished processing of commits after {swProcessCommits.Elapsed.TotalSeconds} seconds.");
         return commits;
-    }
-
-    private static int CalculateDaysSinceStart(DateSummary dateSummary, DateTime startDate)
-    {
-        TimeSpan span = dateSummary.When - startDate;
-        return span.Days;
     }
 }

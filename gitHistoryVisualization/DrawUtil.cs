@@ -42,10 +42,8 @@ public class DrawUtil
 
     public Color BackgroundColor => _backgroundColor;
 
-    public void DrawDateSummary(Graphics graphics, DateSummary dateSummary, float x, float y)
+    public void DrawDateSummary(Graphics graphics, DateSummary dateSummary, ArchimedeanSpiral.Point point)
     {
-        int linesChanged = dateSummary.LinesAdded - dateSummary.LinesRemoved;
-
         float radius;
         Color ellipseColor;
         Color borderColor;
@@ -75,10 +73,10 @@ public class DrawUtil
         }
 
         using SolidBrush fillBrush = new(ellipseColor);
-        graphics.FillEllipse(fillBrush, x - radius, y - radius, 2 * radius, 2 * radius);
+        graphics.FillEllipse(fillBrush, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
 
         using Pen borderPen = new(borderColor, _border);
-        graphics.DrawEllipse(borderPen, x - radius, y - radius, 2 * radius, 2 * radius);
+        graphics.DrawEllipse(borderPen, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
     }
 
     public void DrawIsoscelesTriangle(Graphics g, float baseX, float baseY, float baseWidth, float height, float angle = 0)

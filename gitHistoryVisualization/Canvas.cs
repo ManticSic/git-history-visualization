@@ -8,15 +8,18 @@ namespace gitHistoryVisualization
 {
     public class Canvas : IDisposable
     {
-        private readonly int      _margin;
-        private readonly DrawUtil _drawUtil;
-        private readonly Graphics _graphics;
+        private readonly int               _margin;
+        private readonly ArchimedeanSpiral _spiral;
+        private readonly DrawUtil          _drawUtil;
+        private readonly Graphics          _graphics;
 
         private bool _disposedValue;
 
-        public Canvas(int size, int margin)
+        public Canvas(int size, int margin, ArchimedeanSpiral spiral)
         {
             _margin = margin;
+            _spiral = spiral;
+
             int width  = size;
             int height = size;
 
@@ -63,9 +66,10 @@ namespace gitHistoryVisualization
             GC.SuppressFinalize(this);
         }
 
-        public void DrawCommit(float x, float y, DateSummary dateSummary)
+        public void DrawCommit(DateSummary dateSummary)
         {
-            _drawUtil.DrawDateSummary(_graphics, dateSummary, x, y);
+            ArchimedeanSpiral.Point point = _spiral.GetPoint(dateSummary);
+            _drawUtil.DrawDateSummary(_graphics, dateSummary, point);
         }
 
         protected virtual void Dispose(bool disposing)
