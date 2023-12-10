@@ -14,7 +14,7 @@ public class DrawUtil
 
     private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
     {
-        new CircleRadiusRange(100, 4, 500, 8),
+        new CircleRadiusRange(100, 2, 500, 8),
         new CircleRadiusRange(500, 8, 2500, 12),
         new CircleRadiusRange(2500, 12, 12500, 20),
         new CircleRadiusRange(12500, 20, 25000, 48),
