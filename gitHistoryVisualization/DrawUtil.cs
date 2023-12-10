@@ -111,12 +111,12 @@ public class DrawUtil
 
         if (lines < _circleRadiusBoundary4.Limit)
         {
-            _radiusFunctionLower12500(lines);
+            return _radiusFunctionLower12500(lines);
         }
 
         if (lines < _circleRadiusBoundary5.Limit)
         {
-            _radiusFunctionLower25000(lines);
+            return _radiusFunctionLower25000(lines);
         }
 
         return _circleRadiusBoundary5.Radius;
