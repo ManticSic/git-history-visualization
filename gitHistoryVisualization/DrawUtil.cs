@@ -7,8 +7,10 @@ namespace gitHistoryVisualization;
 
 public class DrawUtil
 {
-    public const  int RefCanvasSize = 2800;
-    private const int RefBorder     = 1;
+    public const  int RefCanvasSize           = 2800;
+    private const int RefBorder               = 1;
+    private const int RefTriangleDisplacement = 2;
+    private const int RefTriangleSize         = 12;
 
     private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
     {
@@ -23,6 +25,8 @@ public class DrawUtil
     private readonly Color _secondaryColor  = Color.FromArgb(255, 10, 16, 36);
     private readonly Color _highlightColor  = Color.FromArgb(255, 183, 88, 70);
     private readonly float _border;
+    private readonly float _triangleDisplacement;
+    private readonly float _triangleSize;
 
     private readonly List<CircleRadiusRange> _circleRadiusBoundaries;
 
@@ -31,7 +35,9 @@ public class DrawUtil
     {
         float factor = CalculateSizeFactor(canvasSize);
 
-        _border = RefBorder * factor;
+        _border               = RefBorder * factor;
+        _triangleDisplacement = RefTriangleDisplacement * factor;
+        _triangleSize         = RefTriangleSize * factor;
 
         _circleRadiusBoundaries = RefCircleRadiusBoundries
                                   .Select(boundary => new CircleRadiusRange(boundary.LeftLimit, boundary.LeftRadius * factor,
@@ -67,31 +73,41 @@ public class DrawUtil
             borderColor  = _secondaryColor;
         }
 
-        if (dateSummary.Release == CommitSummary.ReleaseType.Major || dateSummary.Release == CommitSummary.ReleaseType.Minor)
-        {
-            borderColor = _highlightColor;
-        }
-
         using SolidBrush fillBrush = new(ellipseColor);
         graphics.FillEllipse(fillBrush, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
 
         using Pen borderPen = new(borderColor, _border);
         graphics.DrawEllipse(borderPen, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
+
+        if (dateSummary.Release is CommitSummary.ReleaseType.Major or CommitSummary.ReleaseType.Minor)
+        {
+            float angle = 365f / 360f * dateSummary.When.DayOfYear;
+
+            DrawIsoscelesTriangle(graphics, point.X, point.Y, _triangleSize, angle, radius);
+        }
     }
 
-    public void DrawIsoscelesTriangle(Graphics g, float baseX, float baseY, float baseWidth, float height, float angle = 0)
+    public void DrawIsoscelesTriangle(Graphics g, float centerX, float centerY, float baseSize, float angle, float triangleDisplacement)
     {
+        // Calculate displacement
+        float totalDisplacement = triangleDisplacement + _triangleSize / 2 + _triangleDisplacement;
+        float displacementX     = totalDisplacement * -1 * (float)Math.Sin(angle * Math.PI / 180);
+        float displacementY     = totalDisplacement * (float)Math.Cos(angle * Math.PI / 180);
+
+        centerX += displacementX;
+        centerY += displacementY;
+
         // Calculate the triangle's points
         PointF[] trianglePoints =
         {
-            new(baseX, baseY),
-            new(baseX + baseWidth / 2, baseY - height),
-            new(baseX + baseWidth, baseY)
+            new(centerX - baseSize / 2, centerY + baseSize / 2),
+            new(centerX, centerY - baseSize / 2),
+            new(centerX + baseSize / 2, centerY + baseSize / 2)
         };
 
         // Create rotation matrix
         Matrix matrix = new();
-        matrix.RotateAt(angle, new PointF(baseX + baseWidth / 2, baseY - height / 2));
+        matrix.RotateAt(angle, new PointF(centerX, centerY));
 
         // Apply rotation
         matrix.TransformPoints(trianglePoints);
