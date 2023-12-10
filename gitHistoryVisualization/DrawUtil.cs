@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 
 
 namespace gitHistoryVisualization;
@@ -6,8 +7,8 @@ namespace gitHistoryVisualization;
 
 public class DrawUtil
 {
-    public const  int RefCanvasSize   = 2800;
-    private const int RefCircleBorder = 1;
+    public const  int RefCanvasSize = 2800;
+    private const int RefBorder     = 1;
 
     private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
     {
@@ -21,7 +22,7 @@ public class DrawUtil
     private readonly Color _primaryColor    = Color.FromArgb(255, 144, 160, 204);
     private readonly Color _secondaryColor  = Color.FromArgb(255, 10, 16, 36);
     private readonly Color _highlightColor  = Color.FromArgb(255, 183, 88, 70);
-    private readonly float _circleBorder;
+    private readonly float _border;
 
     private readonly List<CircleRadiusRange> _circleRadiusBoundaries;
 
@@ -30,7 +31,7 @@ public class DrawUtil
     {
         float factor = CalculateSizeFactor(canvasSize);
 
-        _circleBorder = RefCircleBorder * factor;
+        _border = RefBorder * factor;
 
         _circleRadiusBoundaries = RefCircleRadiusBoundries
                                   .Select(boundary => new CircleRadiusRange(boundary.LeftLimit, boundary.LeftRadius * factor,
@@ -71,8 +72,34 @@ public class DrawUtil
         using SolidBrush fillBrush = new(ellipseColor);
         graphics.FillEllipse(fillBrush, x - radius, y - radius, 2 * radius, 2 * radius);
 
-        using Pen borderPen = new(borderColor, _circleBorder);
+        using Pen borderPen = new(borderColor, _border);
         graphics.DrawEllipse(borderPen, x - radius, y - radius, 2 * radius, 2 * radius);
+    }
+
+    public void DrawIsoscelesTriangle(Graphics g, float baseX, float baseY, float baseWidth, float height, float angle = 0)
+    {
+        // Calculate the triangle's points
+        PointF[] trianglePoints =
+        {
+            new(baseX, baseY),
+            new(baseX + baseWidth / 2, baseY - height),
+            new(baseX + baseWidth, baseY)
+        };
+
+        // Create rotation matrix
+        Matrix matrix = new();
+        matrix.RotateAt(angle, new PointF(baseX + baseWidth / 2, baseY - height / 2));
+
+        // Apply rotation
+        matrix.TransformPoints(trianglePoints);
+
+        // Draw the filled triangle
+        using SolidBrush brush = new(_highlightColor);
+        g.FillPolygon(brush, trianglePoints);
+
+        // Add border to the Triangle
+        using Pen borderPen = new(_backgroundColor, _border);
+        g.DrawPolygon(borderPen, trianglePoints);
     }
 
     private float CalculateRadius(int lines)
@@ -89,7 +116,6 @@ public class DrawUtil
 
         return _circleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
     }
-
 
     private static float CalculateSizeFactor(int canvasSize)
     {
