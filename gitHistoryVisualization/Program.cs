@@ -39,19 +39,15 @@ internal class Program
                                               .ToList();
         swProcessCommits.Stop();
         Console.WriteLine($"Finished processing of commits after {swProcessCommits.Elapsed.TotalSeconds} seconds.");
-
-        float outerDiameter = options.Size / 2f;
-        float innerDiameter = options.Size / 5f;
+        
         int   imageSize     = options.Size + 100; // add margin
         float centerX       = imageSize / 2f;
         float centerY       = imageSize / 2f;
 
         DateTime startDate          = commits.Min(summary => summary.When);
         DateTime endDate            = commits.Max(summary => summary.When);
-        int      totalYears         = endDate.Year - startDate.Year + 1;
-        int      stepsPerRevolution = 365;
-        float    increment          = (float)(2 * Math.PI / stepsPerRevolution);
-        float    startAngle         = (float)((startDate.DayOfYear / 365f * 360 + 270) * Math.PI / 180);
+
+        ArchimedeanSpiral spiral = new(options.Size, 365, startDate, endDate);
 
         Console.WriteLine($"Total entries to process: {commits.Count}");
         Stopwatch swDraw = Stopwatch.StartNew();
@@ -64,8 +60,8 @@ internal class Program
 
             foreach (DateSummary dateSummary in commits)
             {
-                float angle  = startAngle + CalculateDaysSinceStart(dateSummary, startDate) * increment;
-                float radius = (float)(innerDiameter + (outerDiameter - innerDiameter) * (angle - startAngle) / (totalYears * 2 * Math.PI));
+                float angle  = spiral.StartAngle + CalculateDaysSinceStart(dateSummary, startDate) * spiral.Increment;
+                float radius = (float)(spiral.InnerDiameter + (spiral.OuterDiameter - spiral.InnerDiameter) * (angle - spiral.StartAngle) / (spiral.Turns * 2 * Math.PI));
 
                 float x = centerX + radius * (float)Math.Cos(angle);
                 float y = centerY + radius * (float)Math.Sin(angle);
