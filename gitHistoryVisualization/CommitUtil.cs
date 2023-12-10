@@ -18,7 +18,7 @@ public class CommitUtil
         return commit;
     }
 
-    public CommitSummary CommitToCommitSummary(Commit commit, Repository repository)
+    public CommitSummary CommitToCommitSummary(Commit commit, Repository repository, Dictionary<string, Tag> commitsWithTag)
     {
         Tree  commitTree       = commit.Tree;
         Tree? parentCommitTree = null;
@@ -34,6 +34,18 @@ public class CommitUtil
 
         Patch patch = repository.Diff.Compare<Patch>(parentCommitTree, commitTree);
 
-        return new CommitSummary(commit.Author.When, patch.LinesAdded, patch.LinesDeleted, isRootCommit);
+        commitsWithTag.TryGetValue(commit.Sha, out Tag? tag);
+
+        return new CommitSummary(commit.Author.When, patch.LinesAdded, patch.LinesDeleted, isRootCommit, tag?.FriendlyName);
+    }
+
+    public DateSummary CreateDateSummary(IGrouping<DateTime, CommitSummary> grouping)
+    {
+        DateTime dateTime = grouping.Key;
+        IEnumerable<CommitSummary> sourceCommits = grouping;
+        bool hasRootCommit = grouping.Any(summary => summary.IsRootCommit);
+        bool hasRelease = grouping.Any(summary => summary.Release == CommitSummary.ReleaseType.Major && summary.Release == CommitSummary.ReleaseType.Minor);
+
+        return new DateSummary(dateTime, sourceCommits, hasRootCommit, hasRelease);
     }
 }

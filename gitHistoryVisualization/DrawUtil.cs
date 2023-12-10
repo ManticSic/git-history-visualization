@@ -69,6 +69,11 @@ public class DrawUtil
             borderColor  = _secondaryColor;
         }
 
+        if (dateSummary.HasRelease)
+        {
+            borderColor = _highlightColor;
+        }
+
         using SolidBrush fillBrush = new(ellipseColor);
         graphics.FillEllipse(fillBrush, x - radius, y - radius, 2 * radius, 2 * radius);
 

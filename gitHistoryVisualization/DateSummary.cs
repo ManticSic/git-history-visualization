@@ -7,10 +7,11 @@ public struct DateSummary
     private readonly Lazy<int>                  _lazyLinesAdded;
     private readonly Lazy<int>                  _lazyLinesRemoved;
 
-    public DateSummary(DateTime dateTime, IEnumerable<CommitSummary> sourceCommits, bool containsRootCommit)
+    public DateSummary(DateTime dateTime, IEnumerable<CommitSummary> sourceCommits, bool containsRootCommit, bool hasRelease)
     {
         When               = dateTime;
         ContainsRootCommit = containsRootCommit;
+        HasRelease    = hasRelease;
 
         _commits          = sourceCommits;
         _lazyLinesAdded   = CreateLazyLinesAdded();
@@ -19,6 +20,7 @@ public struct DateSummary
 
     public DateTime When               { get; }
     public bool     ContainsRootCommit { get; }
+    public bool     HasRelease         { get; }
     public int      LinesAdded         => _lazyLinesAdded.Value;
     public int      LinesRemoved       => _lazyLinesRemoved.Value;
 
