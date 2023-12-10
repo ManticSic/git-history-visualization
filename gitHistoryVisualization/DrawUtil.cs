@@ -7,46 +7,14 @@ namespace gitHistoryVisualization;
 
 public class DrawUtil
 {
-    public const  int RefCanvasSize           = 2800;
-    private const int RefBorder               = 1;
-    private const int RefTriangleDisplacement = 2;
-    private const int RefTriangleSize         = 12;
+    private readonly DrawConstants _constants;
 
-    private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
+    public DrawUtil(DrawConstants constants)
     {
-        new CircleRadiusRange(100, 2, 500, 8),
-        new CircleRadiusRange(500, 8, 2500, 12),
-        new CircleRadiusRange(2500, 12, 12500, 20),
-        new CircleRadiusRange(12500, 20, 25000, 48),
-    };
-
-    private readonly Color _backgroundColor = Color.FromArgb(255, 20, 28, 48);
-    private readonly Color _primaryColor    = Color.FromArgb(255, 144, 160, 204);
-    private readonly Color _secondaryColor  = Color.FromArgb(255, 10, 16, 36);
-    private readonly Color _highlightColor  = Color.FromArgb(255, 183, 88, 70);
-    private readonly float _border;
-    private readonly float _triangleDisplacement;
-    private readonly float _triangleSize;
-
-    private readonly List<CircleRadiusRange> _circleRadiusBoundaries;
-
-
-    public DrawUtil(int canvasSize)
-    {
-        float factor = CalculateSizeFactor(canvasSize);
-
-        _border               = RefBorder * factor;
-        _triangleDisplacement = RefTriangleDisplacement * factor;
-        _triangleSize         = RefTriangleSize * factor;
-
-        _circleRadiusBoundaries = RefCircleRadiusBoundries
-                                  .Select(boundary => new CircleRadiusRange(boundary.LeftLimit, boundary.LeftRadius * factor,
-                                                                            boundary.RightLimit, boundary.RightRadius * factor))
-                                  .OrderBy(boundary => boundary.LeftLimit)
-                                  .ToList();
+        _constants = constants;
     }
 
-    public Color BackgroundColor => _backgroundColor;
+    public Color BackgroundColor => _constants.BackgroundColor;
 
     public void DrawDateSummary(Graphics graphics, DateSummary dateSummary, ArchimedeanSpiral.Point point)
     {
@@ -56,41 +24,42 @@ public class DrawUtil
 
         if (dateSummary.LinesAdded >= dateSummary.LinesRemoved)
         {
-            ellipseColor = _primaryColor;
-            borderColor  = _secondaryColor;
+            ellipseColor = _constants.PrimaryColor;
+            borderColor  = _constants.SecondaryColor;
             radius       = CalculateRadius(dateSummary.LinesAdded);
         }
         else
         {
-            ellipseColor = _backgroundColor;
-            borderColor  = _primaryColor;
+            ellipseColor = _constants.BackgroundColor;
+            borderColor  = _constants.PrimaryColor;
             radius       = CalculateRadius(dateSummary.LinesRemoved);
         }
 
         if (dateSummary.ContainsRootCommit)
         {
-            ellipseColor = _highlightColor;
-            borderColor  = _secondaryColor;
+            ellipseColor = _constants.HighlightColor;
+            borderColor  = _constants.SecondaryColor;
         }
+
 
         using SolidBrush fillBrush = new(ellipseColor);
         graphics.FillEllipse(fillBrush, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
 
-        using Pen borderPen = new(borderColor, _border);
+        using Pen borderPen = new(borderColor, _constants.Border);
         graphics.DrawEllipse(borderPen, point.X - radius, point.Y - radius, 2 * radius, 2 * radius);
 
         if (dateSummary.Release is CommitSummary.ReleaseType.Major or CommitSummary.ReleaseType.Minor)
         {
             float angle = 365f / 360f * dateSummary.When.DayOfYear;
 
-            DrawIsoscelesTriangle(graphics, point.X, point.Y, _triangleSize, angle, radius);
+            DrawIsoscelesTriangle(graphics, point.X, point.Y, _constants.TriangleSize, angle, radius);
         }
     }
 
     public void DrawIsoscelesTriangle(Graphics g, float centerX, float centerY, float baseSize, float angle, float triangleDisplacement)
     {
         // Calculate displacement
-        float totalDisplacement = triangleDisplacement + _triangleSize / 2 + _triangleDisplacement;
+        float totalDisplacement = triangleDisplacement + _constants.TriangleSize / 2 + _constants.TriangleDisplacement;
         float displacementX     = totalDisplacement * -1 * (float)Math.Sin(angle * Math.PI / 180);
         float displacementY     = totalDisplacement * (float)Math.Cos(angle * Math.PI / 180);
 
@@ -113,64 +82,26 @@ public class DrawUtil
         matrix.TransformPoints(trianglePoints);
 
         // Draw the filled triangle
-        using SolidBrush brush = new(_highlightColor);
+        using SolidBrush brush = new(_constants.HighlightColor);
         g.FillPolygon(brush, trianglePoints);
 
         // Add border to the Triangle
-        using Pen borderPen = new(_backgroundColor, _border);
+        using Pen borderPen = new(_constants.BackgroundColor, _constants.Border);
         g.DrawPolygon(borderPen, trianglePoints);
     }
 
     private float CalculateRadius(int lines)
     {
-        if (lines <= _circleRadiusBoundaries.First().LeftLimit)
+        if (lines <= _constants.CircleRadiusBoundaries.First().LeftLimit)
         {
-            return _circleRadiusBoundaries.First().LeftRadius;
+            return _constants.CircleRadiusBoundaries.First().LeftRadius;
         }
 
-        if (lines >= _circleRadiusBoundaries.Last().RightLimit)
+        if (lines >= _constants.CircleRadiusBoundaries.Last().RightLimit)
         {
-            return _circleRadiusBoundaries.Last().RightRadius;
+            return _constants.CircleRadiusBoundaries.Last().RightRadius;
         }
 
-        return _circleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
-    }
-
-    private static float CalculateSizeFactor(int canvasSize)
-    {
-        return (float)RefCanvasSize / canvasSize;
-    }
-
-
-    private readonly struct CircleRadiusRange
-    {
-        private readonly float _slope;
-        private readonly float _intercept;
-
-        public CircleRadiusRange(int leftLimit, float leftRadius, int rightLimit, float rightRadius)
-        {
-            LeftLimit   = leftLimit;
-            LeftRadius  = leftRadius;
-            RightLimit  = rightLimit;
-            RightRadius = rightRadius;
-
-            _slope     = (RightRadius - LeftRadius) / (RightLimit - LeftLimit);
-            _intercept = leftRadius - _slope * leftLimit;
-        }
-
-        public int   LeftLimit   { get; }
-        public float LeftRadius  { get; }
-        public int   RightLimit  { get; }
-        public float RightRadius { get; }
-
-        public float CalcCircleRadius(float lines)
-        {
-            return _slope * lines + _intercept;
-        }
-
-        public bool IsInRange(int lines)
-        {
-            return LeftLimit <= lines && lines <= RightLimit;
-        }
+        return _constants.CircleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
     }
 }

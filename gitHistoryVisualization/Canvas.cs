@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
@@ -15,7 +14,7 @@ namespace gitHistoryVisualization
 
         private bool _disposedValue;
 
-        public Canvas(int size, int margin, ArchimedeanSpiral spiral)
+        public Canvas(int size, int margin, ArchimedeanSpiral spiral, DrawUtil drawUtil)
         {
             _margin = margin;
             _spiral = spiral;
@@ -29,7 +28,7 @@ namespace gitHistoryVisualization
             Bitmap    = new Bitmap(width, height);
             _graphics = Graphics.FromImage(Bitmap);
 
-            _drawUtil = new DrawUtil(size);
+            _drawUtil = drawUtil;
 
             PrepareGraphics();
         }

@@ -10,8 +10,10 @@ namespace gitHistoryVisualization;
 
 internal class Program
 {
-    private static CommitUtil _commitUtill;
-    private static Regex      _tagPattern = new Regex(@"^v\d+.\d+.\d+$", RegexOptions.Compiled);
+    private static CommitUtil    _commitUtill;
+    private static DrawConstants _drawConstants;
+    private static DrawUtil      _drawUtil;
+    private static Regex         _tagPattern = new Regex(@"^v\d+.\d+.\d+$", RegexOptions.Compiled);
 
     private static void Main(string[] args)
     {
@@ -20,7 +22,9 @@ internal class Program
         // Parse arguments
         Options options = Parser.Default.ParseArguments<Options>(args).Value;
 
-        _commitUtill = new CommitUtil();
+        _drawConstants = new DrawConstants(options.Size);
+        _commitUtill   = new CommitUtil();
+        _drawUtil      = new DrawUtil(_drawConstants);
 
         using Repository repository = new(options.PathToRepository);
 
@@ -33,7 +37,7 @@ internal class Program
         Stopwatch swDraw = Stopwatch.StartNew();
 
         ArchimedeanSpiral spiral = new(options.Size, 365, startDate, endDate);
-        using Canvas      canvas = new(options.Size, 50, spiral);
+        using Canvas      canvas = new(options.Size, 50, spiral, _drawUtil);
 
         foreach (DateSummary dateSummary in commits)
         {
