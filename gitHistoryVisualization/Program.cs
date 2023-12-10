@@ -11,7 +11,6 @@ namespace gitHistoryVisualization;
 
 internal class Program
 {
-    private static DrawUtil   _drawUtil;
     private static CommitUtil _commitUtill;
 
     private static void Main(string[] args)
@@ -22,7 +21,6 @@ internal class Program
         Options options = Parser.Default.ParseArguments<Options>(args).Value;
 
         _commitUtill = new CommitUtil();
-        _drawUtil    = new DrawUtil(options.Size);
 
         using Repository repository = new(options.PathToRepository);
 
@@ -51,9 +49,6 @@ internal class Program
 
         using Canvas canvas = new(options.Size, 50);
 
-        canvas.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        canvas.Graphics.Clear(_drawUtil.BackgroundColor);
-
         foreach (DateSummary dateSummary in commits)
         {
             float angle = spiral.StartAngle + CalculateDaysSinceStart(dateSummary, startDate) * spiral.Increment;
@@ -63,7 +58,7 @@ internal class Program
             float x = canvas.CenterX + radius * (float)Math.Cos(angle);
             float y = canvas.CenterY + radius * (float)Math.Sin(angle);
 
-            _drawUtil.DrawDateSummary(canvas.Graphics, dateSummary, x, y);
+            canvas.DrawCommit(x, y, dateSummary);
         }
 
         // save image
