@@ -49,7 +49,7 @@ internal class Program
         }
 
         // save image
-        canvas.Bitmap.Save(options.OutputPath, ImageFormat.Png);
+        canvas.Save(options.OutputPath, ImageFormat.Png);
 
         swDraw.Stop();
         swTotal.Stop();
