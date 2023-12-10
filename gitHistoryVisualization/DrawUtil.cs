@@ -9,29 +9,21 @@ public class DrawUtil
     public const  int RefCanvasSize   = 2800;
     private const int RefCircleBorder = 1;
 
-    private static CircleRadiusBoundary RefCircleRadiusBoundry1 = new(100, 4);
-    private static CircleRadiusBoundary RefCircleRadiusBoundry2 = new(500, 8);
-    private static CircleRadiusBoundary RefCircleRadiusBoundry3 = new(2500, 20);
-    private static CircleRadiusBoundary RefCircleRadiusBoundry4 = new(12500, 45);
-    private static CircleRadiusBoundary RefCircleRadiusBoundry5 = new(25000, 50);
+    private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
+    {
+        new CircleRadiusRange(100, 4, 500, 8),
+        new CircleRadiusRange(500, 8, 2500, 20),
+        new CircleRadiusRange(2500, 20, 12500, 45),
+        new CircleRadiusRange(12500, 45, 25000, 50),
+    };
 
+    private readonly Color _backgroundColor = Color.FromArgb(255, 20, 28, 48);
+    private readonly Color _primaryColor    = Color.FromArgb(255, 144, 160, 204);
+    private readonly Color _secondaryColor  = Color.FromArgb(255, 10, 16, 36);
+    private readonly Color _highlightColor  = Color.FromArgb(255, 183, 88, 70);
+    private readonly float _circleBorder;
 
-    private readonly Color                _backgroundColor = Color.FromArgb(255, 20, 28, 48);
-    private readonly Color                _primaryColor    = Color.FromArgb(255, 144, 160, 204);
-    private readonly Color                _secondaryColor  = Color.FromArgb(255, 10, 16, 36);
-    private readonly Color                _highlightColor  = Color.FromArgb(255, 183, 88, 70);
-    private readonly float                _circleBorder;
-    private readonly CircleRadiusBoundary _circleRadiusBoundary1;
-    private readonly CircleRadiusBoundary _circleRadiusBoundary2;
-    private readonly CircleRadiusBoundary _circleRadiusBoundary3;
-    private readonly CircleRadiusBoundary _circleRadiusBoundary4;
-    private readonly CircleRadiusBoundary _circleRadiusBoundary5;
-
-
-    private readonly Func<int, float> _radiusFunctionLower500;
-    private readonly Func<int, float> _radiusFunctionLower2500;
-    private readonly Func<int, float> _radiusFunctionLower12500;
-    private readonly Func<int, float> _radiusFunctionLower25000;
+    private readonly List<CircleRadiusRange> _circleRadiusBoundaries;
 
 
     public DrawUtil(int canvasSize)
@@ -40,20 +32,11 @@ public class DrawUtil
 
         _circleBorder = RefCircleBorder * factor;
 
-        _circleRadiusBoundary1 = new(RefCircleRadiusBoundry1.Limit, RefCircleRadiusBoundry1.Radius * factor);
-        _circleRadiusBoundary2 = new(RefCircleRadiusBoundry2.Limit, RefCircleRadiusBoundry2.Radius * factor);
-        _circleRadiusBoundary3 = new(RefCircleRadiusBoundry3.Limit, RefCircleRadiusBoundry3.Radius * factor);
-        _circleRadiusBoundary4 = new(RefCircleRadiusBoundry4.Limit, RefCircleRadiusBoundry4.Radius * factor);
-        _circleRadiusBoundary5 = new(RefCircleRadiusBoundry5.Limit, RefCircleRadiusBoundry5.Radius * factor);
-
-        _radiusFunctionLower500 =
-            GenerateCircleCalculation(_circleRadiusBoundary1, _circleRadiusBoundary2);
-        _radiusFunctionLower2500 =
-            GenerateCircleCalculation(_circleRadiusBoundary2, _circleRadiusBoundary3);
-        _radiusFunctionLower12500 =
-            GenerateCircleCalculation(_circleRadiusBoundary3, _circleRadiusBoundary4);
-        _radiusFunctionLower25000 =
-            GenerateCircleCalculation(_circleRadiusBoundary4, _circleRadiusBoundary5);
+        _circleRadiusBoundaries = RefCircleRadiusBoundries
+                                  .Select(boundary => new CircleRadiusRange(boundary.LeftLimit, boundary.LeftRadius * factor,
+                                                                            boundary.RightLimit, boundary.RightRadius * factor))
+                                  .OrderBy(boundary => boundary.LeftLimit)
+                                  .ToList();
     }
 
     public Color BackgroundColor => _backgroundColor;
@@ -94,32 +77,17 @@ public class DrawUtil
 
     private float CalculateRadius(int lines)
     {
-        if (lines < _circleRadiusBoundary1.Limit)
+        if (lines <= _circleRadiusBoundaries.First().LeftLimit)
         {
-            return _circleRadiusBoundary1.Radius;
+            return _circleRadiusBoundaries.First().LeftRadius;
         }
 
-        if (lines < _circleRadiusBoundary2.Limit)
+        if (lines >= _circleRadiusBoundaries.Last().RightLimit)
         {
-            return _radiusFunctionLower500(lines);
+            return _circleRadiusBoundaries.Last().RightRadius;
         }
 
-        if (lines < _circleRadiusBoundary3.Limit)
-        {
-            return _radiusFunctionLower2500(lines);
-        }
-
-        if (lines < _circleRadiusBoundary4.Limit)
-        {
-            return _radiusFunctionLower12500(lines);
-        }
-
-        if (lines < _circleRadiusBoundary5.Limit)
-        {
-            return _radiusFunctionLower25000(lines);
-        }
-
-        return _circleRadiusBoundary5.Radius;
+        return _circleRadiusBoundaries.First(range => range.IsInRange(lines)).CalcCircleRadius(lines);
     }
 
 
@@ -128,27 +96,36 @@ public class DrawUtil
         return (float)RefCanvasSize / canvasSize;
     }
 
-    private static Func<int, float> GenerateCircleCalculation(CircleRadiusBoundary point1, CircleRadiusBoundary point2)
+
+    private readonly struct CircleRadiusRange
     {
-        (int X, float Y) p1 = (X: point1.Limit, Y: point1.Radius);
-        (int X, float Y) p2 = (X: point2.Limit, Y: point2.Radius);
+        private readonly float _slope;
+        private readonly float _intercept;
 
-        float slope     = (p2.Y - p1.Y) / (p2.X - p1.X);
-        float intercept = p1.Y - slope * p1.X;
-
-        return lines => slope * lines + intercept;
-    }
-
-
-    private struct CircleRadiusBoundary
-    {
-        public CircleRadiusBoundary(int limit, float radius)
+        public CircleRadiusRange(int leftLimit, float leftRadius, int rightLimit, float rightRadius)
         {
-            Limit  = limit;
-            Radius = radius;
+            LeftLimit   = leftLimit;
+            LeftRadius  = leftRadius;
+            RightLimit  = rightLimit;
+            RightRadius = rightRadius;
+
+            _slope     = (RightRadius - LeftRadius) / (RightLimit - LeftLimit);
+            _intercept = leftRadius - _slope * leftLimit;
         }
 
-        public int   Limit  { get; }
-        public float Radius { get; }
+        public int   LeftLimit   { get; }
+        public float LeftRadius  { get; }
+        public int   RightLimit  { get; }
+        public float RightRadius { get; }
+
+        public float CalcCircleRadius(float lines)
+        {
+            return _slope * lines + _intercept;
+        }
+
+        public bool IsInRange(int lines)
+        {
+            return LeftLimit <= lines && lines <= RightLimit;
+        }
     }
 }
