@@ -12,9 +12,9 @@ public class DrawUtil
     private static List<CircleRadiusRange> RefCircleRadiusBoundries = new()
     {
         new CircleRadiusRange(100, 4, 500, 8),
-        new CircleRadiusRange(500, 8, 2500, 20),
-        new CircleRadiusRange(2500, 20, 12500, 45),
-        new CircleRadiusRange(12500, 45, 25000, 50),
+        new CircleRadiusRange(500, 8, 2500, 12),
+        new CircleRadiusRange(2500, 12, 12500, 20),
+        new CircleRadiusRange(12500, 20, 25000, 48),
     };
 
     private readonly Color _backgroundColor = Color.FromArgb(255, 20, 28, 48);
