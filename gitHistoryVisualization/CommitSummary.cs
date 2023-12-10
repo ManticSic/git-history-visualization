@@ -52,8 +52,8 @@ public struct CommitSummary
     public enum ReleaseType
     {
         None,
-        Major,
+        Patch,
         Minor,
-        Patch
+        Major,
     }
 }

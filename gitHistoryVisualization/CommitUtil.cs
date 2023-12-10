@@ -41,11 +41,10 @@ public class CommitUtil
 
     public DateSummary CreateDateSummary(IGrouping<DateTime, CommitSummary> grouping)
     {
-        DateTime dateTime = grouping.Key;
-        IEnumerable<CommitSummary> sourceCommits = grouping;
-        bool hasRootCommit = grouping.Any(summary => summary.IsRootCommit);
-        bool hasRelease = grouping.Any(summary => summary.Release == CommitSummary.ReleaseType.Major && summary.Release == CommitSummary.ReleaseType.Minor);
+        DateTime            dateTime      = grouping.Key;
+        List<CommitSummary> sourceCommits = grouping.ToList();
+        bool                hasRootCommit = grouping.Any(summary => summary.IsRootCommit);
 
-        return new DateSummary(dateTime, sourceCommits, hasRootCommit, hasRelease);
+        return new DateSummary(dateTime, sourceCommits, hasRootCommit);
     }
 }

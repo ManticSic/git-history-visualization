@@ -67,7 +67,7 @@ public class DrawUtil
             borderColor  = _secondaryColor;
         }
 
-        if (dateSummary.HasRelease)
+        if (dateSummary.Release == CommitSummary.ReleaseType.Major || dateSummary.Release == CommitSummary.ReleaseType.Minor)
         {
             borderColor = _highlightColor;
         }
