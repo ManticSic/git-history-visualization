@@ -1,5 +1,7 @@
 ﻿# Git History Visualization
 
+<img alt="Visualized Repository: Git" src="./result/git-repository.jpg" height="auto" width="500" />
+
 ## Description
 
 This project creates a visualization of a Git repository.
